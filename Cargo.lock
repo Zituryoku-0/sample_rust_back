@@ -390,7 +390,6 @@ dependencies = [
  "axum",
  "dotenvy",
  "serde",
- "serde_json",
  "thiserror",
  "tokio",
  "tower-http",
