@@ -1,0 +1,17 @@
+# Example environment configuration for local development.
+# 
+# DO NOT put real secrets in this file. Instead:
+#   1. Copy this file to ".env" (or another local-only env file).
+#   2. Adjust the values as needed for your environment.
+#   3. Ensure your real ".env" is listed in .gitignore so it is not committed.
+#
+# The values below are safe, non-sensitive defaults for local use.
+
+# Application port
+# PORT=3000
+
+# Frontend origin (CORS, redirects, etc.)
+# FRONTEND_ORIGIN=http://localhost:5173
+
+# Rust logging level
+# RUST_LOG=info
