@@ -1,6 +1,5 @@
 mod app;
 mod config;
-mod dto;
 mod error;
 mod routes;
 
