@@ -11,6 +11,8 @@ pub enum AppError {
     NotFound,
     #[error("internal error")]
     Internal,
+    #[error("db error: {0}")]
+    Db(#[from] sqlx::Error),
 }
 
 #[derive(Serialize)]
@@ -27,6 +29,13 @@ impl IntoResponse for AppError {
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "internal error".to_string(),
             ),
+            AppError::Db(e) => {
+                tracing::error!(error = %e, "sqlx error");
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "db connection error".to_string(),
+                )
+            }
         };
         (status, Json(ErrorBody { message: msg })).into_response()
     }
