@@ -44,9 +44,17 @@ async fn login() -> Result<Json<Response<Login>>, AppError> {
     .bind("abcdefgh")
     .fetch_one(&pool)
     .await
-    .map_err(|err| {
-        tracing::error!(error = %err, "failed to select userinfo");
-        err
+    .map_err(|err| match err {
+        sqlx::Error::RowNotFound => {
+            // 認証失敗または該当ユーザーなしの場合は、404相当のエラーを返す
+            tracing::warn!("userinfo not found for given credentuials");
+            AppError::NotFound
+        }
+        other => {
+            // その他エラーはINTERNAL ERRORとする
+            tracing::error!(error = %other, "failed to select userinfo");
+            AppError::Internal
+        }
     })?;
 
     // トリムする
