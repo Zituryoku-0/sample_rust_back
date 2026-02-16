@@ -14,9 +14,9 @@ struct Login {
     message: String,
 }
 
-async fn login(State(pool): State<PgPool>) -> Result<Json<Response<Login>>, AppError> {
+async fn login(State(db_pool): State<PgPool>) -> Result<Json<Response<Login>>, AppError> {
     // SELECT
-    let _one: i32 = sqlx::query_scalar("SELECT 1").fetch_one(&pool).await?;
+    let _one: i32 = sqlx::query_scalar("SELECT 1").fetch_one(&db_pool).await?;
 
     let select_userinfo: userinfo::UserInfo = sqlx::query_as(
         "SELECT
@@ -29,7 +29,7 @@ async fn login(State(pool): State<PgPool>) -> Result<Json<Response<Login>>, AppE
     )
     .bind("sampleUserId1")
     .bind("abcdefgh")
-    .fetch_one(&pool)
+    .fetch_one(&db_pool)
     .await
     .map_err(|err| match err {
         sqlx::Error::RowNotFound => {

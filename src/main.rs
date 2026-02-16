@@ -17,7 +17,10 @@ async fn main() {
     // DB接続プールを起動時に一度だけ作成
     let pool = PgPool::connect(&cfg.database_url)
         .await
-        .expect("failed to connect to database");
+        .unwrap_or_else(|err| {
+            tracing::error!(error = %err, "failed to connect to database");
+            panic!("Database connection failed: {}", err)
+        });
 
     let app = app::build_app(&cfg, pool);
 
