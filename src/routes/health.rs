@@ -1,5 +1,6 @@
 use axum::{routing::get, Json, Router};
 use serde::Serialize;
+use sqlx::PgPool;
 
 #[derive(Serialize)]
 struct HealthResponse {
@@ -10,6 +11,6 @@ async fn health() -> Json<HealthResponse> {
     Json(HealthResponse { status: "ok" })
 }
 
-pub fn router() -> Router {
+pub fn router() -> Router<PgPool> {
     Router::new().route("/health", get(health))
 }

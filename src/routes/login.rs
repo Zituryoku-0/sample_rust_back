@@ -1,4 +1,4 @@
-use axum::{routing::get, Json, Router};
+use axum::{extract::State, routing::get, Json, Router};
 use serde::Serialize;
 
 use crate::dto::common::{Response, ResponseInfo};
@@ -14,20 +14,7 @@ struct Login {
     message: String,
 }
 
-async fn login() -> Result<Json<Response<Login>>, AppError> {
-    // .env読込
-    dotenvy::dotenv().ok();
-
-    // DBプール作成
-    let database_url = std::env::var("DATABASE_URL").map_err(|err| {
-        tracing::error!(error = %err, "DATABASE_URL is not set");
-        AppError::Internal
-    })?;
-    let pool = PgPool::connect(&database_url).await.map_err(|err| {
-        tracing::error!(error = %err, "failed to connect to database");
-        AppError::Internal
-    })?;
-
+async fn login(State(pool): State<PgPool>) -> Result<Json<Response<Login>>, AppError> {
     // SELECT
     let _one: i32 = sqlx::query_scalar("SELECT 1").fetch_one(&pool).await?;
 
@@ -75,6 +62,6 @@ async fn login() -> Result<Json<Response<Login>>, AppError> {
     }))
 }
 
-pub fn router() -> Router {
+pub fn router() -> Router<PgPool> {
     Router::new().route("/login", get(login))
 }
