@@ -33,7 +33,7 @@ impl IntoResponse for AppError {
                 tracing::error!(error = %e, "sqlx error");
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    "db connection error".to_string(),
+                    "database error".to_string(),
                 )
             }
         };

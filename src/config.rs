@@ -6,6 +6,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 pub struct AppConfig {
     pub port: u16,
     pub frontend_origin: String,
+    pub database_url: String,
 }
 
 impl AppConfig {
@@ -16,9 +17,11 @@ impl AppConfig {
             .unwrap_or(8080);
         let frontend_origin =
             env::var("FRONTEND_ORIGIN").unwrap_or_else(|_| "http://localhost:5173".to_string());
+        let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
         Self {
             port,
             frontend_origin,
+            database_url,
         }
     }
 

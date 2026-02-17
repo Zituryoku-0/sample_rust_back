@@ -2,11 +2,12 @@ use axum::{
     http::{header, HeaderValue, Method},
     Router,
 };
+use sqlx::PgPool;
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 
 use crate::config::AppConfig;
 
-pub fn build_app(cfg: &AppConfig) -> Router {
+pub fn build_app(cfg: &AppConfig, pool: PgPool) -> Router {
     let cors = CorsLayer::new()
         .allow_origin(
             cfg.frontend_origin
@@ -27,4 +28,5 @@ pub fn build_app(cfg: &AppConfig) -> Router {
         .nest("/", crate::routes::router())
         .layer(TraceLayer::new_for_http())
         .layer(cors)
+        .with_state(pool)
 }
