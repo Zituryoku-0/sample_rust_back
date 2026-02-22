@@ -22,9 +22,6 @@ async fn login(
     State(pool): State<PgPool>,
     Json(request_info): Json<LoginRequest>,
 ) -> Result<Json<Response<Login>>, AppError> {
-    // SELECT
-    let _one: i32 = sqlx::query_scalar("SELECT 1").fetch_one(&pool).await?;
-
     let select_userinfo: userinfo::UserInfo = sqlx::query_as(
         "SELECT
         userId AS user_id,
