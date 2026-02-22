@@ -2,7 +2,7 @@ use axum::extract::State;
 use axum::{routing::post, Json, Router};
 use serde::Serialize;
 
-use crate::dto::common::{RequestInfo, Response, ResponseInfo};
+use crate::dto::common::{LoginRequest, Response, ResponseInfo};
 use crate::dto::user::userinfo;
 use crate::error::AppError;
 use sqlx::PgPool;
@@ -20,7 +20,7 @@ struct Login {
 
 async fn login(
     State(pool): State<PgPool>,
-    Json(requestinfo): Json<RequestInfo>,
+    Json(request_info): Json<LoginRequest>,
 ) -> Result<Json<Response<Login>>, AppError> {
     // SELECT
     let _one: i32 = sqlx::query_scalar("SELECT 1").fetch_one(&pool).await?;
@@ -34,8 +34,8 @@ async fn login(
         AND userPassword = $2
         AND delete_flg = FALSE",
     )
-    .bind(&requestinfo.user_id)
-    .bind(&requestinfo.password)
+    .bind(&request_info.user_id)
+    .bind(&request_info.password)
     .fetch_one(&pool)
     .await
     .map_err(|err| match err {

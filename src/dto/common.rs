@@ -1,8 +1,8 @@
 pub mod data;
-pub mod requestinfo;
+pub mod loginrequest;
+pub mod response;
 pub mod responseinfo;
-pub mod respose;
 
-pub use requestinfo::RequestInfo;
+pub use loginrequest::LoginRequest;
+pub use response::Response;
 pub use responseinfo::ResponseInfo;
-pub use respose::Response;
