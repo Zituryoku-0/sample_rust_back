@@ -2,20 +2,26 @@ use axum::extract::State;
 use axum::{routing::post, Json, Router};
 use serde::Serialize;
 
-use crate::dto::common::{Response, ResponseInfo};
+use crate::dto::common::{RequestInfo, Response, ResponseInfo};
 use crate::dto::user::userinfo;
 use crate::error::AppError;
 use sqlx::PgPool;
 
-#[derive(Serialize)]
+#[derive(Debug, Serialize)]
 struct Login {
+    #[serde(rename = "userId")]
     user_id: String,
+    #[serde(rename = "userName")]
     user_name: String,
+    #[serde(rename = "loginCheck")]
     login_check: bool,
     message: String,
 }
 
-async fn login(State(pool): State<PgPool>) -> Result<Json<Response<Login>>, AppError> {
+async fn login(
+    State(pool): State<PgPool>,
+    Json(requestinfo): Json<RequestInfo>,
+) -> Result<Json<Response<Login>>, AppError> {
     // SELECT
     let _one: i32 = sqlx::query_scalar("SELECT 1").fetch_one(&pool).await?;
 
@@ -28,14 +34,14 @@ async fn login(State(pool): State<PgPool>) -> Result<Json<Response<Login>>, AppE
         AND userPassword = $2
         AND delete_flg = FALSE",
     )
-    .bind("sampleUserId1")
-    .bind("abcdefgh")
+    .bind(&requestinfo.user_id)
+    .bind(&requestinfo.password)
     .fetch_one(&pool)
     .await
     .map_err(|err| match err {
         sqlx::Error::RowNotFound => {
             // 認証失敗または該当ユーザーなしの場合は、404相当のエラーを返す
-            tracing::warn!("userinfo not found for given credentuials");
+            tracing::warn!("userinfo not found for given credentials");
             AppError::NotFound
         }
         other => {
