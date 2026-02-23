@@ -21,7 +21,7 @@ struct Login {
 async fn login(
     State(pool): State<PgPool>,
     Json(request_info): Json<LoginRequest>,
-) -> Result<Json<Response<Login>>, AppError> {
+) -> Result<Json<Response<Login>>, Json<Response<Login>>> {
     let select_userinfo: userinfo::UserInfo = sqlx::query_as(
         "SELECT
         userId AS user_id,
@@ -37,14 +37,36 @@ async fn login(
     .await
     .map_err(|err| match err {
         sqlx::Error::RowNotFound => {
-            // 認証失敗または該当ユーザーなしの場合は、404相当のエラーを返す
             tracing::warn!("userinfo not found for given credentials");
-            AppError::NotFound
+            // 認証失敗または該当ユーザーなしの場合は、400相当のエラーを返す
+            Json(Response {
+                responseinfo: ResponseInfo {
+                    code: "400".to_string(),
+                    message: "error".to_string(),
+                },
+                data: Login {
+                    user_id: "".to_string(),
+                    user_name: "".to_string(),
+                    login_check: false,
+                    message: AppError::NotFound.to_string(),
+                },
+            })
         }
         other => {
-            // その他エラーはINTERNAL ERRORとする
             tracing::error!(error = %other, "failed to select userinfo");
-            AppError::Internal
+            // その他エラーはINTERNAL ERRORとする
+            Json(Response {
+                responseinfo: ResponseInfo {
+                    code: "500".to_string(),
+                    message: "error".to_string(),
+                },
+                data: Login {
+                    user_id: "".to_string(),
+                    user_name: "".to_string(),
+                    login_check: false,
+                    message: AppError::NotFound.to_string(),
+                },
+            })
         }
     })?;
 
@@ -61,7 +83,7 @@ async fn login(
             user_id: trim_user_id.to_string(),
             user_name: trim_user_name.to_string(),
             login_check: true,
-            message: "サンプルメッセージ".to_string(),
+            message: "ログインに成功しました。".to_string(),
         },
     }))
 }
