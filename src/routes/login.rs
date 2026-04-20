@@ -2,6 +2,7 @@ use axum::extract::State;
 use axum::{routing::post, Json, Router};
 use serde::Serialize;
 
+use crate::common::hash;
 use crate::dto::common::{LoginRequest, Response, ResponseInfo};
 use crate::dto::user::userinfo;
 use crate::error::AppError;
@@ -25,14 +26,13 @@ async fn login(
     let select_userinfo: userinfo::UserInfo = sqlx::query_as(
         "SELECT
         userId AS user_id,
-        userName AS user_name
+        userName AS user_name,
+        userPassword AS user_password
         FROM userinfo
         WHERE userId = $1
-        AND userPassword = $2
         AND delete_flg = FALSE",
     )
     .bind(&request_info.user_id)
-    .bind(&request_info.password)
     .fetch_one(&pool)
     .await
     .map_err(|err| match err {
@@ -52,6 +52,24 @@ async fn login(
             AppError::Internal
         }
     })?;
+
+    let hashed = select_userinfo.user_password.trim();
+
+    let password_check = hash::verify_password(&request_info.password, hashed).map_err(|err| {
+        tracing::error!(error = %err, "パスワード検証でエラーが発生しました。");
+        AppError::Internal
+    })?;
+    if !password_check {
+        tracing::warn!("パスワードが一致しませんでした。");
+        return Err(AppError::NotFound {
+            data: serde_json::json!(Login {
+                user_id: "".to_string(),
+                user_name: "".to_string(),
+                login_check: false,
+                message: "ユーザーIDもしくはパスワードが不正です。".to_string(),
+            }),
+        });
+    }
 
     // トリムする
     let trim_user_id = select_userinfo.user_id.trim();
