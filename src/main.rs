@@ -1,5 +1,4 @@
 mod app;
-mod bin;
 mod common;
 mod config;
 mod dto;
