@@ -3,6 +3,7 @@ use argon2::{
     Argon2,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), argon2::password_hash::Error> {
     let password = "abcdefgh";
     let salt = SaltString::generate(&mut OsRng);

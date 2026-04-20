@@ -5,6 +5,7 @@ use argon2::{
     Argon2,
 };
 
+#[allow(dead_code)]
 fn hash_password(password: &str) -> Result<String, Error> {
     // ランダムなソルトを生成
     let salt = SaltString::generate(&mut OsRng);
