@@ -37,13 +37,18 @@ async fn login(
     .await
     .map_err(|err| match err {
         sqlx::Error::RowNotFound => {
-            // 認証失敗または該当ユーザーなしの場合は、404相当のエラーを返す
-            tracing::warn!("userinfo not found for given credentials");
-            AppError::NotFound
+            tracing::warn!("該当するユーザーが存在しません。");
+            AppError::NotFound {
+                data: serde_json::json!(Login {
+                    user_id: "".to_string(),
+                    user_name: "".to_string(),
+                    login_check: false,
+                    message: "ユーザーIDもしくはパスワードが不正です。".to_string(),
+                }),
+            }
         }
         other => {
-            // その他エラーはINTERNAL ERRORとする
-            tracing::error!(error = %other, "failed to select userinfo");
+            tracing::error!(error = %other, "ログイン処理でエラーが発生しました。");
             AppError::Internal
         }
     })?;
@@ -61,7 +66,7 @@ async fn login(
             user_id: trim_user_id.to_string(),
             user_name: trim_user_name.to_string(),
             login_check: true,
-            message: "サンプルメッセージ".to_string(),
+            message: "ログインに成功しました。".to_string(),
         },
     }))
 }
