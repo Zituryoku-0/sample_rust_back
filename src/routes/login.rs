@@ -21,7 +21,7 @@ struct Login {
 async fn login(
     State(pool): State<PgPool>,
     Json(request_info): Json<LoginRequest>,
-) -> Result<Json<Response<Login>>, Json<Response<Login>>> {
+) -> Result<Json<Response<Login>>, AppError> {
     let select_userinfo: userinfo::UserInfo = sqlx::query_as(
         "SELECT
         userId AS user_id,
@@ -37,36 +37,19 @@ async fn login(
     .await
     .map_err(|err| match err {
         sqlx::Error::RowNotFound => {
-            tracing::warn!("userinfo not found for given credentials");
-            // 認証失敗または該当ユーザーなしの場合は、400相当のエラーを返す
-            Json(Response {
-                responseinfo: ResponseInfo {
-                    code: "400".to_string(),
-                    message: "error".to_string(),
-                },
-                data: Login {
+            tracing::warn!("該当するユーザーが存在しません。");
+            AppError::NotFound {
+                data: serde_json::json!(Login {
                     user_id: "".to_string(),
                     user_name: "".to_string(),
                     login_check: false,
-                    message: AppError::NotFound.to_string(),
-                },
-            })
+                    message: "ユーザーIDもしくはパスワードが不正です。".to_string(),
+                }),
+            }
         }
         other => {
-            tracing::error!(error = %other, "failed to select userinfo");
-            // その他エラーはINTERNAL ERRORとする
-            Json(Response {
-                responseinfo: ResponseInfo {
-                    code: "500".to_string(),
-                    message: "error".to_string(),
-                },
-                data: Login {
-                    user_id: "".to_string(),
-                    user_name: "".to_string(),
-                    login_check: false,
-                    message: AppError::NotFound.to_string(),
-                },
-            })
+            tracing::error!(error = %other, "ログイン処理でエラーが発生しました。");
+            AppError::Internal
         }
     })?;
 
