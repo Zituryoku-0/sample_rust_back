@@ -25,7 +25,7 @@ pub fn build_app(cfg: &AppConfig, pool: PgPool) -> Router {
         .allow_credentials(true);
 
     Router::new()
-        .nest("/", crate::routes::router())
+        .merge(crate::routes::router())
         .layer(TraceLayer::new_for_http())
         .layer(cors)
         .with_state(pool)

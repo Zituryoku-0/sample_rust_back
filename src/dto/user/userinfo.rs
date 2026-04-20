@@ -7,4 +7,6 @@ pub struct UserInfo {
     pub user_id: String,
     #[serde(rename = "userName")]
     pub user_name: String,
+    #[serde(skip_serializing)]
+    pub user_password: String,
 }
